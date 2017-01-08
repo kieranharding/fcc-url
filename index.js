@@ -40,11 +40,18 @@ app.get('/testpr', (req, response) => {
     .catch((err) => response.end(err.message))
 })
 
-app.get('/new/:url/', (request, response) => {
-  // Ensure this is a valid url
+app.get('/new/*', (request, response) => {
+  function send_result (response, original, short) { // Do I need to pass in the response? Probably not.
+    response.writeHead(200, {'content-type': 'text/json'})
+      const output = {
+        "original_url": original,
+        "short_url": 'https://kah-fcc-url.herokuapp.com/' + short
+      }
+    response.end(JSON.stringify(output))
+  }
+
   if (true) { // TODO: Middleware or function to check URL validity. Why?
-    const arg_url = request.params.url
-    let arg_id
+    const arg_url = request.params[0]
     // Check the database for the url
     pool.query('SELECT id FROM list WHERE url = $1', [arg_url], (err, result) => {
       if (err) {
@@ -52,6 +59,7 @@ app.get('/new/:url/', (request, response) => {
         response.writeHead(500, {'content-type': 'text/plain'})
         response.end('An error occured.')
       }
+
       // If it doesn't exist, add the url to the database
       if (result.rows.length < 1) {
         pool.query('INSERT INTO list (url) VALUES ($1) RETURNING id', [arg_url], (err, result) => {
@@ -61,22 +69,15 @@ app.get('/new/:url/', (request, response) => {
             response.end('An error occured.')
           }
 
-          arg_id = result.rows[0].id
+        send_result(response, arg_url, base58.encode(result.rows[0].id))
+          // arg_id = result.rows[0].id
         })
       } else {
-        arg_id = result.rows[0].id
+        send_result(response, arg_url, base58.encode(result.rows[0].id))
+        // arg_id = result.rows[0].id
       }
-      
-      response.writeHead(200, {'content-type': 'text/json'})
-      const output = {
-        "original_url": arg_url,
-        "short_url": arg_id
-      }
-      response.end(JSON.stringify(output))
     })
     
-
-
     // Return a JSON string with the full and short urls
   } else {
     // res.writeHead({'content-type': 'text/plain'})
