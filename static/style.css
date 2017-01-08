@@ -1,0 +1,12 @@
+.example {
+  font-family: monospace;
+  /*background-color: lightgrey;*/
+  margin: 2em 0;
+}
+
+.main {
+  width: 60%;
+  min-width: 400px;
+  margin: 0 auto;
+  padding: 0 4em;
+}

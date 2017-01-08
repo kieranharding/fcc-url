@@ -21,6 +21,8 @@ const poolConfig = {
 
 const pool = new pg.Pool(poolConfig)
 
+app.use(express.static('static'))
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname + '/index.html'))
 })
