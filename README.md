@@ -25,5 +25,6 @@ will redirect to FreeCodeCamp.
 ### Why?
 
 This is a backend project as part of [FreeCodeCamp](https://freecodecamp.com)'s curriculum. 
+
 Specifically, it is my practice project for integrating a database into a nodejs project. 
 Obviously for it to be useful, I would need a much shorter domain.
