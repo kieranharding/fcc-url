@@ -35,8 +35,7 @@ app.get('/testdb', (req, response) => {
 
 app.get('/testpr', (req, response) => {
   pool.query('SELECT * FROM list')
-    .then((result) => response.end(result.rows[4].id + ': ' + result.rows[4].url)
-  )
+    .then((result) => response.end(result.rows[0].id + ' ' + result.rows[0].url))
     .catch((err) => response.end(err.message))
 })
 
@@ -50,9 +49,10 @@ app.get('/new/*', (request, response) => {
     response.end(JSON.stringify(output))
   }
 
-  if (true) { // TODO: Middleware or function to check URL validity. Why?
+  if (true) { // TODO: Middleware or function to check URL validity.
     const arg_url = request.params[0]
     // Check the database for the url
+    // TODO: Clean this up by using the Promise api instead.
     pool.query('SELECT id FROM list WHERE url = $1', [arg_url], (err, result) => {
       if (err) {
         console.log(err.message, err.stack)
@@ -85,17 +85,32 @@ app.get('/new/*', (request, response) => {
   }
 })
 
-app.get('/:url_id', (req, res) => {
+app.get('/:url_id', (request, response) => {
   // If the id is base58, decode it.
-  if (!/^[1-9a-km-zA-HJK-NP-Z]*$/.test(req.params.url_id)) {
-    res.end(req.params.url_id + ' is not a valid code.')
+  if (!/^[1-9a-km-zA-HJK-NP-Z]*$/.test(request.params.url_id)) {
+    response.writeHead(500, {'content-type': 'text/plain'})
+    response.end(request.params.url_id + ' is not a valid code.')
   } else {
-    const db_id = base58.decode(req.params.url_id)
+    // If the decoded id is in the database, get the url
+    const db_id = base58.decode(request.params.url_id)
+    pool.query('SELECT * FROM list WHERE id = $1', [db_id])
+      .then((result) => {
+        if (result.rows.length > 0) {
+          // Redirect the browser to the url
+          response.redirect(result.rows[0].url)
+        } else {
+          // If the decoded id is not in the database, return an error message
+          response.writeHead(500, {'content-type': 'text/plain'})
+          response.end(reques.params.url_id + ' is not in the database.')
+        }
+      })
+      .catch((err) => {
+        console.log(err.message)
+        response.writeHead(500, {'content-type': 'text/plain'})
+        response.end('An error occured')
+      })
   }
-  // If the decoded id is in the database, get the url
   
-  // Redirect the browser to the url
-  // If the decoded id is not in the database, return an error message
 })
 const port = process.env.PORT || 5000
 app.listen(port)
