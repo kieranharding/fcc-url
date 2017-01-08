@@ -49,7 +49,8 @@ app.get('/new/*', (request, response) => {
     response.end(JSON.stringify(output))
   }
 
-  if (true) { // TODO: Middleware or function to check URL validity.
+  const url_re = new RegExp('^https?://(\w+\.)+\w+', 'i')
+  if (url_re.test(request.params[0])) { 
     const arg_url = request.params[0]
     // Check the database for the url
     // TODO: Clean this up by using the Promise api instead.
@@ -69,19 +70,17 @@ app.get('/new/*', (request, response) => {
             response.end('An error occured.')
           }
 
-        send_result(response, arg_url, base58.encode(result.rows[0].id))
-          // arg_id = result.rows[0].id
+          send_result(response, arg_url, base58.encode(result.rows[0].id))
         })
       } else {
         send_result(response, arg_url, base58.encode(result.rows[0].id))
-        // arg_id = result.rows[0].id
       }
     })
     
     // Return a JSON string with the full and short urls
   } else {
-    // res.writeHead({'content-type': 'text/plain'})
-    res.end(req.params.url + ' is not a valid URL')
+    response.writeHead(500, {'content-type': 'text/plain'})
+    response.end(request.params[0] + ' is not a valid URL.')
   }
 })
 
@@ -101,7 +100,7 @@ app.get('/:url_id', (request, response) => {
         } else {
           // If the decoded id is not in the database, return an error message
           response.writeHead(500, {'content-type': 'text/plain'})
-          response.end(reques.params.url_id + ' is not in the database.')
+          response.end(request.params.url_id + ' is not in the database.')
         }
       })
       .catch((err) => {
@@ -110,7 +109,6 @@ app.get('/:url_id', (request, response) => {
         response.end('An error occured')
       })
   }
-  
 })
 const port = process.env.PORT || 5000
 app.listen(port)
